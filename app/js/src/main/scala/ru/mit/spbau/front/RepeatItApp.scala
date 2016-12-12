@@ -32,10 +32,10 @@ object RepeatItApp extends JSApp {
             if (p.isSuccess) {
                 dom.window.alert(s"Logged as ${p.get.response.toString}")
                 dom.window.console.log("Success")
-                switchToMainPage()
+                switchToPage(Consts.userPagePath, setupUserPage)
             } else {
                 dom.window.alert("Not logged in, go login...")
-                switchToLoginPage()
+                switchToPage(Consts.loginPagePath, setupLoginPage)
             }
         }
         )
@@ -56,16 +56,17 @@ object RepeatItApp extends JSApp {
     }
 
     /**
-      * Show login form to user
+      * Fills page and runs given continuation ater ready
+      * @param placeholderPageLink page to get and fill placeholder
+      * @param setupper setup page function
       */
-    def switchToLoginPage(): Unit = {
+    def switchToPage(placeholderPageLink: String, setupper: () => Unit): Unit = {
         Ajax.get(
-            url = Consts.loginPagePath
+            url = placeholderPageLink
         ).foreach(x => {
             jQuery("#placeholder").html(x.responseText)
-            setupLoginPage()
-        }
-        )
+            setupper()
+        })
     }
 
     /**
@@ -77,7 +78,6 @@ object RepeatItApp extends JSApp {
         loginForm.onsubmit = {
             (e: Event) => {
                 e.preventDefault() // do not refresh the page, man!
-                dom.window.alert("SUBMIT FORM")
                 val user = jQuery("#login-user").value().toString
                 val password = jQuery("#login-password").value().toString
                 dom.window.console.log(s"$user $password")
@@ -88,25 +88,27 @@ object RepeatItApp extends JSApp {
                     data = upickle.default.write(credentials),
                     headers = sessionTokenHeader
                 ).onComplete( p =>
-                    switchToMainPage()
+                    switchToPage(Consts.userPagePath, setupUserPage)
                 )
+            }
+        }
+
+        val createNewAccount = dom.document.getElementById("create-new-acc-btn").asInstanceOf[html.Link]
+        createNewAccount.onclick = {
+            (e: Event) => {
+                e.preventDefault()
+                switchToPage(Consts.registerPagePath, setupRegisterPage)
             }
         }
     }
 
-    /**
-      * Show main vards view to user
-      */
-    def switchToMainPage(): Unit = {
-        Ajax.get(
-            url = Consts.userPagePath
-        ).foreach(x => {
-            jQuery("#placeholder").html(x.responseText)
-            setupCardsPage()
-        })
+
+
+    def setupRegisterPage(): Unit = {
+
     }
 
-    def setupCardsPage(): Unit = {
+    def setupUserPage(): Unit = {
 
     }
 
