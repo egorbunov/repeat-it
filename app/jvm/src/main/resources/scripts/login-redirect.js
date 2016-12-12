@@ -6,15 +6,15 @@
 //$loginForm.hide();
 //$logoutForm.hide();
 
-function handleResponse(data, status) {
-    if (status == 'success') {
+//function handleResponse(data, status) {
+//    if (status == 'success') {
 
 //        $loginForm.hide();
 //        $logoutForm.show();
 //        $currentLogin.text(data);
 //        $currentLoginStatus.text(status);
-    } else {
-        window.location.href = '/site/login.html'
+//    } else {
+//        window.location.href = '/site/login.html'
 //        $loginForm.show();
 //        $logoutForm.hide();
 //        $currentLogin.text('');
@@ -22,16 +22,16 @@ function handleResponse(data, status) {
     }
 }
 
-function getCurrentLogin() {
-    $.ajax(addCsrfHeader({
-        url: '/api/current_login',
-        type: 'GET',
-        success: handleResponse,
-        error: handleResponse
-    }));
-}
-
-getCurrentLogin();
+//function getCurrentLogin() {
+//    $.ajax(addCsrfHeader({
+//        url: '/api/current_login',
+//        type: 'GET',
+//        success: handleResponse,
+//        error: handleResponse
+//    }));
+//}
+//
+//getCurrentLogin();
 
 //$('#do_login').click(function(e) {
 //    $.ajax(addCsrfHeader({
@@ -54,15 +54,15 @@ getCurrentLogin();
 //    return false;
 //});
 
-function addCsrfHeader(opts) {
-    var token = Cookies.get('XSRF-TOKEN');
-    if (token) {
-        console.log('Setting csrf token: ' + token);
-        opts['headers'] = {
-            'X-XSRF-TOKEN': token
-        }
-    } else {
-        console.log('No csrf token');
-    }
-    return opts;
-}
+//function addCsrfHeader(opts) {
+//    var token = Cookies.get('XSRF-TOKEN');
+//    if (token) {
+//        console.log('Setting csrf token: ' + token);
+//        opts['headers'] = {
+//            'X-XSRF-TOKEN': token
+//        }
+//    } else {
+//        console.log('No csrf token');
+//    }
+//    return opts;
+//}

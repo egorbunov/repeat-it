@@ -5,38 +5,24 @@ import com.couchmate.jscookie.Cookies
 import scala.scalajs.js.JSApp
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
+import org.scalajs.dom.html
+import org.scalajs.dom.raw.Event
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scalajs.jquery.jQuery
 import ru.mit.spbau.scala.shared.Consts
+import ru.mit.spbau.scala.shared.data.UserCredentials
 
 object RepeatItApp extends JSApp {
     override def main(): Unit = {
-        val curPath = dom.window.location.pathname
-        dom.window.console.log(curPath)
-        curPath match {
-            case Consts.loginPagePath => setupLoginPage()
-            case Consts.indexPagePath => setupMainPage()
-            case Consts.registerPagePath => setupRegisterPage()
-        }
-    }
-
-    def setupLoginPage(): Unit = {
-//        jQuery("#sign-in-btn")
-        dom.window.console.log("Setting up login page")
-    }
-
-    def setupRegisterPage(): Unit = {
-        dom.window.console.log("Setting up register page")
-    }
-
-    def setupMainPage(): Unit = {
         validateLogin()
-        dom.window.console.log("Setting up main page")
     }
 
     /**
-      * Validates if user is logged in
+      * Entry point
+      *
+      * Validates if user is logged in and in case of failure redirects
+      * to login page
       */
     def validateLogin(): Unit = {
         Ajax.get(
@@ -44,10 +30,12 @@ object RepeatItApp extends JSApp {
             headers = sessionTokenHeader
         ).onComplete(p => {
             if (p.isSuccess) {
+                dom.window.alert(s"Logged as ${p.get.response.toString}")
                 dom.window.console.log("Success")
+                switchToMainPage()
             } else {
-                dom.window.console.log("Not logged in, redirecting...")
-                dom.window.location.href = Consts.loginPagePath
+                dom.window.alert("Not logged in, go login...")
+                switchToLoginPage()
             }
         }
         )
@@ -66,4 +54,61 @@ object RepeatItApp extends JSApp {
         }
         Map.empty
     }
+
+    /**
+      * Show login form to user
+      */
+    def switchToLoginPage(): Unit = {
+        Ajax.get(
+            url = Consts.loginPagePath
+        ).foreach(x => {
+            jQuery("#placeholder").html(x.responseText)
+            setupLoginPage()
+        }
+        )
+    }
+
+    /**
+      * Setup button listeners for login page
+      */
+    def setupLoginPage(): Unit = {
+        val loginBtn = dom.document.getElementById("sign-in-btn").asInstanceOf[html.Button]
+        val loginForm = dom.document.getElementById("login-form").asInstanceOf[html.Form]
+        loginForm.onsubmit = {
+            (e: Event) => {
+                e.preventDefault() // do not refresh the page, man!
+                dom.window.alert("SUBMIT FORM")
+                val user = jQuery("#login-user").value().toString
+                val password = jQuery("#login-password").value().toString
+                dom.window.console.log(s"$user $password")
+                val credentials = UserCredentials(user, password)
+
+                Ajax.post(
+                    url = "/api/login",
+                    data = upickle.default.write(credentials),
+                    headers = sessionTokenHeader
+                ).onComplete( p =>
+                    switchToMainPage()
+                )
+            }
+        }
+    }
+
+    /**
+      * Show main vards view to user
+      */
+    def switchToMainPage(): Unit = {
+        Ajax.get(
+            url = Consts.userPagePath
+        ).foreach(x => {
+            jQuery("#placeholder").html(x.responseText)
+            setupCardsPage()
+        })
+    }
+
+    def setupCardsPage(): Unit = {
+
+    }
+
+
 }

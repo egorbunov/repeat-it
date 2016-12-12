@@ -4,4 +4,5 @@ object Consts {
     val indexPagePath: String = "/site/index.html"
     val loginPagePath: String = "/site/login.html"
     val registerPagePath: String = "/site/register.html"
+    val userPagePath: String = "/site/user-page.html"
 }

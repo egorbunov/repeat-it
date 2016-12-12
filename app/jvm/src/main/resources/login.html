@@ -1,28 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Repeat it login">
-    <meta name="author" content="Egor Gorbunov">
-
-    <title>LOGIN RepeatIt</title>
-
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="/site/app-jsdeps.min.js"></script>
-
-    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>-->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <!--<script src="scripts/js-cookie.js"></script>-->
-
-    <script src="/site/app-opt.js"></script>
-</head>
-
-<body>
-
 <div class="container">
     <div class="row">
         <div class="col-sm-6 col-md-4 col-md-offset-4">
@@ -30,20 +5,13 @@
             <div class="account-wall">
                 <img class="profile-img" src="img/repeat.png"
                      alt="">
-                <form class="form-signin">
+                <form class="form-signin" id="login-form">
                     <input id="login-user" type="text" class="form-control" placeholder="Email" required autofocus>
                     <input id="login-password" type="password" class="form-control" placeholder="Password" required>
-                    <button id="sign-in-btn" class="btn btn-lg btn-primary btn-block" type="submit">
-                        Sign in</button>
+                    <button id="sign-in-btn" class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
                 </form>
             </div>
             <a href="/register" class="text-center new-account">Create an account </a>
         </div>
     </div>
 </div>
-
-    <script type="text/javascript">
-      ru.mit.spbau.front.RepeatItApp().main();
-    </script>
-</body>
-</html>

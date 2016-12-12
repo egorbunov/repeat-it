@@ -20,7 +20,8 @@ val app = crossProject.in(file("app")).
         libraryDependencies ++= Seq(
             "org.scala-js" %%% "scalajs-dom" % "0.9.1",
             "be.doeraene" %%% "scalajs-jquery" % "0.9.1",
-            "org.webjars" % "js-cookie" % "2.1.0"
+            "org.webjars" % "js-cookie" % "2.1.0",
+            "org.scala-lang.modules" %% "scala-async" % "0.9.6"
         ),
         jsDependencies ++= Seq(
             "org.webjars" % "jquery" % "2.1.3" / "2.1.3/jquery.js",

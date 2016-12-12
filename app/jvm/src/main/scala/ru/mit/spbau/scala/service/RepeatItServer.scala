@@ -1,7 +1,9 @@
 package com.softwaremill.example
 
 import akka.actor.ActorSystem
+import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpResponse
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes._
@@ -13,6 +15,7 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import com.typesafe.scalalogging.StrictLogging
 import ru.mit.spbau.scala.shared.Consts
+import ru.mit.spbau.scala.shared.data.UserCredentials
 
 import scala.io.StdIn
 import scala.util.Try
@@ -48,11 +51,13 @@ object RepeatItServer extends App with StrictLogging {
                 pathPrefix("api") {
                     path("login") {
                         post {
-                            entity(as[String]) { body =>
-                                logger.info(s"Logging in $body")
-
-                                setRepeatItSession(RepeatItSession(body)) {
-                                    setNewCsrfToken(checkHeader) { ctx => ctx.complete("ok") }
+                            entity(as[String]) { e =>
+                                val userCreds = upickle.default.read[UserCredentials](e)
+                                logger.info(s"Logging in user: $userCreds")
+                                setRepeatItSession(RepeatItSession(userCreds.login)) {
+                                    setNewCsrfToken(checkHeader) { ctx =>
+                                        ctx.complete("ok")
+                                    }
                                 }
                             }
                         }
@@ -70,6 +75,7 @@ object RepeatItServer extends App with StrictLogging {
                         // This should be protected and accessible only when logged in
                         path("current_login") {
                             get {
+                                logger.info("Current login get request.")
                                 userSession { session => ctx =>
                                     logger.info("Current session: " + session)
                                     ctx.complete(session.username)
