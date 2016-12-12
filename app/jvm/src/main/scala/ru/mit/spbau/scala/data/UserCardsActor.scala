@@ -1,6 +1,7 @@
 package ru.mit.spbau.scala.data
 
 import akka.persistence.{PersistentActor, SnapshotOffer}
+import com.typesafe.scalalogging.StrictLogging
 import ru.mit.spbau.scala.shared.data.CardToRepeatData
 
 /**
@@ -19,7 +20,7 @@ object CardsEvent {
   * Actor, which persists user cards information
   * @param userId id of the user, which cards are persisted
   */
-class UserCardsActor(val userId: String) extends PersistentActor {
+class UserCardsActor(val userId: String) extends PersistentActor with StrictLogging {
     override def persistenceId: String = s"cards_persistence_for_user_$userId"
 
     var state = UserCardsActor.State()
@@ -30,11 +31,13 @@ class UserCardsActor(val userId: String) extends PersistentActor {
 
     override def receiveCommand: Receive = {
         case e: CardsEvent.NewCard =>
+            logger.info("Got new card message")
             val id = state.size
             persist(e) { event =>
                 state = state.cardAdded(id, event.card)
             }
         case e: CardsEvent.DeleteCard =>
+            logger.info("Got delete card message")
             if (!state.cards.contains(e.cardId)) {
                 throw new IllegalArgumentException(s"card with such id does not exists: ${e.cardId}" )
             }
@@ -42,6 +45,7 @@ class UserCardsActor(val userId: String) extends PersistentActor {
                 state = state.cardDeleted(event.cardId)
             }
         case e: CardsEvent.CardChanged =>
+            logger.info("Got change card message")
             if (!state.cards.contains(e.cardId)) {
                 throw new IllegalArgumentException(s"card with such id does not exists: ${e.cardId}" )
             }
@@ -49,6 +53,7 @@ class UserCardsActor(val userId: String) extends PersistentActor {
                 state = state.cardChanged(event.cardId, event.newCardData)
             }
         case CardsEvent.GetCards =>
+            logger.info("Got get cards message")
             sender() ! state.cards
     }
 }

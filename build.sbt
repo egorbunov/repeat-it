@@ -31,6 +31,8 @@ val app = crossProject.in(file("app")).
     jvmSettings(
         libraryDependencies ++= Seq(
             "com.typesafe.akka" %% "akka-persistence" % "2.4.14",
+            "org.iq80.leveldb" % "leveldb" % "0.7",
+            "org.fusesource.leveldbjni" % "leveldbjni-all" % "1.8",
             "com.typesafe.akka" %% "akka-http" % "10.0.0",
             "com.typesafe.scala-logging" %% "scala-logging" % "3.5.0",
             "com.softwaremill.akka-http-session" %% "core" % "0.3.0",
