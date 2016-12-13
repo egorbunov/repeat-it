@@ -4,10 +4,10 @@ import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.Event
-import org.scalajs.jquery.{JQueryEventObject, jQuery}
-import ru.mit.spbau.front.{LoginManagement, RegistrationPage, Routing}
-import ru.mit.spbau.scala.shared.Consts
+import org.scalajs.jquery.jQuery
+import ru.mit.spbau.front.LoginManagement
 import ru.mit.spbau.scala.shared.data.{CardImportancePolicy, CardToRepeatData}
+
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object AddCardPage {

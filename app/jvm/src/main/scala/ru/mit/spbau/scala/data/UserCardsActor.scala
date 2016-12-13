@@ -10,8 +10,8 @@ import ru.mit.spbau.scala.shared.data.CardToRepeatData
 sealed trait CardsActorEvent
 object CardsActorEvent {
     case class NewCard(card: CardToRepeatData) extends CardsActorEvent
-    case class DeleteCard(cardId: Integer) extends CardsActorEvent
-    case class CardChanged(cardId: Integer, newCardData: CardToRepeatData) extends CardsActorEvent
+    case class DeleteCard(cardId: Int) extends CardsActorEvent
+    case class CardChanged(cardId: Int, newCardData: CardToRepeatData) extends CardsActorEvent
     case class GetCards() extends CardsActorEvent
     case class Shutdown() extends CardsActorEvent
 }
@@ -69,16 +69,16 @@ object UserCardsActor {
     /**
       * State of cards persistent actor, which just holds a map of cards
       */
-    case class State(cards: Map[Integer, CardToRepeatData] = Map.empty) {
+    case class State(cards: Map[Int, CardToRepeatData] = Map.empty) {
         def cardAdded(id: Integer, cardData: CardToRepeatData): State = {
             copy(cards.updated(id, cardData))
         }
 
-        def cardChanged(id: Integer, newCardData: CardToRepeatData): State = {
+        def cardChanged(id: Int, newCardData: CardToRepeatData): State = {
             copy(cards.updated(id, newCardData))
         }
 
-        def cardDeleted(id: Integer): State = {
+        def cardDeleted(id: Int): State = {
             copy(cards - id)
         }
 

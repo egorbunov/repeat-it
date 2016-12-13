@@ -4,11 +4,11 @@ import com.couchmate.jscookie.Cookies
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
-import org.scalajs.dom.raw.{Event, XMLHttpRequest}
+import org.scalajs.dom.raw.Event
 import org.scalajs.jquery.jQuery
 import ru.mit.spbau.front.logged.UserPage
-import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 import ru.mit.spbau.scala.shared.data.UserCredentials
+import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import scala.util.{Failure, Success}

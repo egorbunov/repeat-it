@@ -1,23 +1,30 @@
 package ru.mit.spbau.front.logged
 
 import org.scalajs.dom
+import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.Event
 import org.scalajs.jquery.jQuery
-import ru.mit.spbau.front.{LoginManagement, RegistrationPage, Routing}
+import ru.mit.spbau.front.{LoginManagement, Routing}
 import ru.mit.spbau.scala.shared.Consts
+import ru.mit.spbau.scala.shared.data.CardToRepeatData
+
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
 /**
   * Main page, which user sees after login
   */
 object UserPage {
+    var userCards: Map[Int, CardToRepeatData] = Map.empty
+
     def setupUserPage(username: String): Unit = {
         jQuery("#logged-in-username").html(s"Logged as <b>$username</b>")
 
         setupLogoutButton()
         setupDoRepeatButton()
         setupAddCardButton()
+        setupUserCards()
     }
 
     private def setupLogoutButton(): Unit = {
@@ -49,5 +56,16 @@ object UserPage {
                 Consts.userPlaceholderId
             )
         }
+    }
+
+    private def setupUserCards(): Unit = {
+        Ajax.get(
+            url = "/api/get_cards",
+            headers = LoginManagement.sessionTokenHeader
+        ).onSuccess({ case xhr =>
+            userCards = upickle.default.read[Map[Int, CardToRepeatData]](xhr.responseText)
+            dom.window.console.log(userCards.size)
+            dom.window.console.log(userCards.toString())
+        })
     }
 }

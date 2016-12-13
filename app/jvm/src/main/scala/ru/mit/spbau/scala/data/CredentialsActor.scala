@@ -2,7 +2,7 @@ package ru.mit.spbau.scala.data
 
 import akka.persistence.{PersistentActor, SnapshotOffer}
 import com.typesafe.scalalogging.StrictLogging
-import ru.mit.spbau.scala.shared.data.{CardToRepeatData, UserCredentials}
+import ru.mit.spbau.scala.shared.data.UserCredentials
 
 
 /**

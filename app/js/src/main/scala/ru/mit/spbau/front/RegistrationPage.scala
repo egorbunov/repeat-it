@@ -1,15 +1,14 @@
 package ru.mit.spbau.front
 
-import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
-import org.scalajs.jquery.jQuery
-import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 import org.scalajs.dom
-import org.scalajs.dom.ext.{Ajax, AjaxException}
-import org.scalajs.dom.{XMLHttpRequest, html}
+import org.scalajs.dom.ext.Ajax
+import org.scalajs.dom.html
 import org.scalajs.dom.raw.Event
+import org.scalajs.jquery.jQuery
 import ru.mit.spbau.scala.shared.data.UserCredentials
+import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 
-import scala.util.{Failure, Success}
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object RegistrationPage {
     def setupRegisterPage(): Unit = {

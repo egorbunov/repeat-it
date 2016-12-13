@@ -2,26 +2,25 @@ package com.softwaremill.example
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpResponse
-import akka.stream.ActorMaterializer
-import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive0
-import com.softwaremill.session._
+import akka.http.scaladsl.server.Directives._
+import akka.pattern.ask
+import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import com.softwaremill.session.CsrfDirectives._
 import com.softwaremill.session.CsrfOptions._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
+import com.softwaremill.session._
 import com.typesafe.scalalogging.StrictLogging
 import ru.mit.spbau.scala.data._
-import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
-import ru.mit.spbau.scala.shared.data.{CardToRepeatData, UserCredentials}
-import akka.pattern.ask
-import akka.util.Timeout
 import ru.mit.spbau.scala.service.ApiStatusCode
+import ru.mit.spbau.scala.shared.Consts
+import ru.mit.spbau.scala.shared.data.{CardToRepeatData, UserCredentials}
 
-import scala.concurrent.duration._
 import scala.concurrent.Await
+import scala.concurrent.duration._
 import scala.io.StdIn
 import scala.util.Try
 
@@ -154,7 +153,17 @@ object RepeatItServer extends App with StrictLogging {
                         path("get_cards") {
                             get {
                                 userSession { session => ctx =>
-                                    ctx.complete(ApiStatusCode.OK)
+                                    if (!userCardsActorsMap.contains(session.username)) {
+                                        logger.error("No user credentials actor available for logged user!")
+                                        ctx.reject()
+                                    } else {
+                                        val cardsActor = userCardsActorsMap.get(session.username).get
+
+                                        val f = ask(cardsActor, CardsActorEvent.GetCards)
+                                            .mapTo[Map[Int, CardToRepeatData]]
+                                        val cardsData = Await.result(f, timeout.duration)
+                                        ctx.complete(ApiStatusCode.OK, upickle.default.write(cardsData))
+                                    }
                                 }
                             }
                         } ~
