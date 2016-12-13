@@ -18,8 +18,13 @@ class UsersCredsActor extends PersistentActor with StrictLogging {
     }
 
     override def receiveCommand: Receive = {
-        case UserCredsEvent.CheckLogin(creds) =>
-            logger.info(s"Got check login message: $creds")
+        case UserCredsEvent.CheckUsername(username) =>
+            logger.info(s"Got check username message: $username")
+            val usr = state.usersCreds.get(username)
+            sender() ! usr.isDefined
+
+        case UserCredsEvent.CheckCredentials(creds) =>
+            logger.info(s"Got check credentials message: $creds")
             val usr = state.usersCreds.get(creds.login)
             val result = usr.exists(uc => {
                 uc.password == creds.password
@@ -40,7 +45,9 @@ object UserCredsEvent {
 
     case class Register(creds: UserCredentials) extends UserCredsEvent
 
-    case class CheckLogin(creds: UserCredentials) extends UserCredsEvent
+    case class CheckCredentials(creds: UserCredentials) extends UserCredsEvent
+
+    case class CheckUsername(username: String) extends UserCredsEvent
 
 }
 

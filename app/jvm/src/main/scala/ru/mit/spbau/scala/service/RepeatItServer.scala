@@ -14,11 +14,12 @@ import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import com.typesafe.scalalogging.StrictLogging
 import ru.mit.spbau.scala.data.UsersCredsActor
-import ru.mit.spbau.scala.shared.Consts
+import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 import ru.mit.spbau.scala.shared.data.UserCredentials
 import ru.mit.spbau.scala.data.UserCredsEvent
 import akka.pattern.ask
 import akka.util.Timeout
+import ru.mit.spbau.scala.service.ApiStatusCode
 
 import scala.concurrent.duration._
 import scala.concurrent.Await
@@ -45,6 +46,8 @@ object RepeatItServer extends App with StrictLogging {
     // setting up user credentials persistent actor
     val usersCredentialsActor = system.actorOf(Props[UsersCredsActor], name = "users_credentials")
 
+    implicit val timeout = Timeout(5 seconds)
+
     val routes =
         path("") {
             redirect(Consts.indexPagePath, StatusCodes.Found)
@@ -64,17 +67,16 @@ object RepeatItServer extends App with StrictLogging {
                             entity(as[String]) { e =>
                                 val userCreds = upickle.default.read[UserCredentials](e)
                                 logger.info(s"Registration request: $userCreds")
-                                implicit val timeout = Timeout(5 seconds)
-                                val future = usersCredentialsActor ? UserCredsEvent.CheckLogin(userCreds)
+                                val future = usersCredentialsActor ? UserCredsEvent.CheckUsername(userCreds.login)
                                 val doesUserExists = Await.result(future, timeout.duration).asInstanceOf[Boolean]
                                 logger.info(s"User $userCreds already exists? $doesUserExists")
                                 if (!doesUserExists) {
                                     logger.info(s"Accept registration $userCreds")
                                     usersCredentialsActor ! UserCredsEvent.Register(userCreds)
-                                    complete(StatusCodes.OK, s"Succesffuly registered user ${userCreds.login}")
+                                    complete(ApiStatusCode.OK)
                                 } else {
                                     logger.info(s"Reject registration $userCreds")
-                                    complete(StatusCodes.OK, "User is already registered")
+                                    complete(ApiStatusCode.userAlreadyExists)
                                 }
                             }
                         }
@@ -84,11 +86,23 @@ object RepeatItServer extends App with StrictLogging {
                                 entity(as[String]) { e =>
                                     val userCreds = upickle.default.read[UserCredentials](e)
                                     logger.info(s"Logging in user: $userCreds")
-                                    setRepeatItSession(RepeatItSession(userCreds.login)) {
-                                        setNewCsrfToken(checkHeader) { ctx =>
-                                            ctx.complete(StatusCodes.OK)
+
+                                    val f = usersCredentialsActor ? UserCredsEvent.CheckCredentials(userCreds)
+                                    val isOkCreds = Await.result(f, timeout.duration).asInstanceOf[Boolean]
+
+                                    logger.info(s"Credentials $userCreds check status: $isOkCreds")
+
+                                    if (!isOkCreds) {
+                                        complete(ApiStatusCode.userNotRegistered)
+                                    } else {
+                                        setRepeatItSession(RepeatItSession(userCreds.login)) {
+                                            setNewCsrfToken(checkHeader) { ctx =>
+                                                ctx.complete(ApiStatusCode.OK)
+                                            }
                                         }
                                     }
+
+
                                 }
                             }
                         } ~
@@ -97,7 +111,7 @@ object RepeatItServer extends App with StrictLogging {
                                 userSession { session =>
                                     myInvalidateSession { ctx =>
                                         logger.info(s"Logging out $session")
-                                        ctx.complete(StatusCodes.OK)
+                                        ctx.complete(ApiStatusCode.OK)
                                     }
                                 }
                             }
@@ -109,7 +123,7 @@ object RepeatItServer extends App with StrictLogging {
                                 userSession { session =>
                                     ctx =>
                                         logger.info("Current session: " + session)
-                                        ctx.complete(StatusCodes.OK, session.username)
+                                        ctx.complete(ApiStatusCode.OK, session.username)
                                 }
                             }
                         } ~
@@ -117,7 +131,15 @@ object RepeatItServer extends App with StrictLogging {
                             get {
                                 userSession { session =>
                                     ctx =>
-                                        ctx.complete(StatusCodes.OK, "asdsa")
+                                        ctx.complete(ApiStatusCode.OK, "asdsa")
+                                }
+                            }
+                        } ~
+                        path("add_new_card") {
+                            post {
+                                userSession { session =>
+                                    ctx =>
+                                        ctx.complete(ApiStatusCode.OK)
                                 }
                             }
                         }

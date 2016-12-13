@@ -12,7 +12,13 @@ import org.scalajs.dom.raw.Event
   * Main page, which user sees after login
   */
 object UserPage {
-    def setupUserPage(): Unit = {
+    def setupUserPage(username: String): Unit = {
+        jQuery("#logged-in-username").html(s"Logged as <b>$username</b>")
 
+        // logout button setup
+        val logoutBtn = dom.document.getElementById("logout-btn").asInstanceOf[html.Button]
+        logoutBtn.onclick = (e: Event) => {
+            LoginManagement.doLogout()
+        }
     }
 }

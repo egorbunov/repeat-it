@@ -6,7 +6,7 @@ import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.{Event, XMLHttpRequest}
 import org.scalajs.jquery.jQuery
-import ru.mit.spbau.scala.shared.Consts
+import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 import ru.mit.spbau.scala.shared.data.UserCredentials
 
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
@@ -21,16 +21,27 @@ object LoginManagement {
       * to login page
       */
     def validateLogin(): Unit = {
+        doIfLoggedIn(
+            onSuccess = (username: String) => {
+                Routing.switchToPage(Consts.userPagePath, () => {UserPage.setupUserPage(username)})
+
+            },
+            onFailure = (_: Throwable) => {
+                dom.window.console.log(s"Redirecting to login page...")
+                Routing.switchToPage(Consts.loginPagePath, setupLoginPage)
+            })
+    }
+
+    def doIfLoggedIn(onSuccess: (String) => Unit, onFailure: (Throwable) => Unit): Unit = {
         Ajax.get(
             url = "/api/current_login",
             headers = sessionTokenHeader
         ).onComplete({
             case Success(xhr) =>
-                dom.window.console.log(s"Logged as ${xhr.responseText}")
-                Commons.switchToPage(Consts.userPagePath, UserPage.setupUserPage)
+                dom.window.console.log(s"Current login = ${xhr.responseText}")
+                onSuccess(xhr.responseText)
             case Failure(t) =>
-                dom.window.alert("FAILURE")
-                Commons.switchToPage(Consts.loginPagePath, setupLoginPage)
+                onFailure(t)
         })
     }
 
@@ -46,6 +57,19 @@ object LoginManagement {
             dom.window.console.log("No csrf token")
         }
         Map.empty
+    }
+
+    def doLogout(): Unit = {
+        Ajax.post(
+            url = "/api/logout",
+            headers = sessionTokenHeader
+        ).onComplete({
+            case Success(xhr) =>
+                dom.window.alert("Bye-bye!")
+                Routing.switchToPage(Consts.loginPagePath, LoginManagement.setupLoginPage)
+            case Failure(t) =>
+                dom.console.error(s"Failed to logout: ${t.getMessage}")
+        })
     }
 
     /**
@@ -68,10 +92,12 @@ object LoginManagement {
                     data = upickle.default.write(credentials),
                     headers = sessionTokenHeader
                 ).onSuccess({ case xhr =>
-                    if (xhr.status == Commons.OK) {
-                        Commons.switchToPage(Consts.userPagePath, UserPage.setupUserPage)
+                    if (xhr.status == ApiStatus.OK) {
+                        Routing.switchToPage(Consts.userPagePath, ()=>{UserPage.setupUserPage(user)})
+                    } else if (xhr.status == ApiStatus.userNotRegistered) {
+                        dom.window.alert("Wrong username or password (no user with given creds)")
                     } else {
-                        dom.window.alert("Wrong username or password")
+                        dom.console.error("Unknown response code on login")
                     }
                 }
                 )
@@ -82,9 +108,8 @@ object LoginManagement {
         createNewAccount.onclick = {
             (e: Event) => {
                 e.preventDefault()
-                Commons.switchToPage(Consts.registerPagePath, RegistrationPage.setupRegisterPage)
+                Routing.switchToPage(Consts.registerPagePath, RegistrationPage.setupRegisterPage)
             }
         }
     }
-
 }

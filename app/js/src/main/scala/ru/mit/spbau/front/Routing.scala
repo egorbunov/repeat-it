@@ -6,10 +6,7 @@ import org.scalajs.jquery.jQuery
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 
-object Commons {
-    // http response status codes
-    val OK = 200
-
+object Routing {
     /**
       * Fills page and runs given continuation ater ready
       * @param placeholderPageLink page to get and fill placeholder
