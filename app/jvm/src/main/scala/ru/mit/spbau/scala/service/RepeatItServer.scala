@@ -131,11 +131,19 @@ object RepeatItServer extends App with StrictLogging {
                             get {
                                 userSession { session =>
                                     ctx =>
-                                        ctx.complete(ApiStatusCode.OK, "asdsa")
+                                        ctx.complete(ApiStatusCode.OK)
                                 }
                             }
                         } ~
                         path("add_new_card") {
+                            post {
+                                userSession { session =>
+                                    ctx =>
+                                        ctx.complete(ApiStatusCode.OK)
+                                }
+                            }
+                        } ~
+                        path("delete_card") {
                             post {
                                 userSession { session =>
                                     ctx =>

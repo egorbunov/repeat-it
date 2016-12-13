@@ -6,6 +6,7 @@ import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.{Event, XMLHttpRequest}
 import org.scalajs.jquery.jQuery
+import ru.mit.spbau.front.logged.UserPage
 import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
 import ru.mit.spbau.scala.shared.data.UserCredentials
 
@@ -23,12 +24,19 @@ object LoginManagement {
     def validateLogin(): Unit = {
         doIfLoggedIn(
             onSuccess = (username: String) => {
-                Routing.switchToPage(Consts.userPagePath, () => {UserPage.setupUserPage(username)})
+                Routing.switchPageContents(
+                    Consts.userPagePath,
+                    () => {UserPage.setupUserPage(username)},
+                    Consts.globalPlaceholderId
+                )
 
             },
             onFailure = (_: Throwable) => {
                 dom.window.console.log(s"Redirecting to login page...")
-                Routing.switchToPage(Consts.loginPagePath, setupLoginPage)
+                Routing.switchPageContents(
+                    Consts.loginPagePath,
+                    setupLoginPage,
+                    Consts.globalPlaceholderId)
             })
     }
 
@@ -66,7 +74,11 @@ object LoginManagement {
         ).onComplete({
             case Success(xhr) =>
                 dom.window.alert("Bye-bye!")
-                Routing.switchToPage(Consts.loginPagePath, LoginManagement.setupLoginPage)
+                Routing.switchPageContents(
+                    Consts.loginPagePath,
+                    LoginManagement.setupLoginPage,
+                    Consts.globalPlaceholderId
+                )
             case Failure(t) =>
                 dom.console.error(s"Failed to logout: ${t.getMessage}")
         })
@@ -93,7 +105,11 @@ object LoginManagement {
                     headers = sessionTokenHeader
                 ).onSuccess({ case xhr =>
                     if (xhr.status == ApiStatus.OK) {
-                        Routing.switchToPage(Consts.userPagePath, ()=>{UserPage.setupUserPage(user)})
+                        Routing.switchPageContents(
+                            Consts.userPagePath,
+                            ()=>{UserPage.setupUserPage(user)},
+                            Consts.globalPlaceholderId
+                        )
                     } else if (xhr.status == ApiStatus.userNotRegistered) {
                         dom.window.alert("Wrong username or password (no user with given creds)")
                     } else {
@@ -108,7 +124,11 @@ object LoginManagement {
         createNewAccount.onclick = {
             (e: Event) => {
                 e.preventDefault()
-                Routing.switchToPage(Consts.registerPagePath, RegistrationPage.setupRegisterPage)
+                Routing.switchPageContents(
+                    Consts.registerPagePath,
+                    RegistrationPage.setupRegisterPage,
+                    Consts.globalPlaceholderId
+                )
             }
         }
     }

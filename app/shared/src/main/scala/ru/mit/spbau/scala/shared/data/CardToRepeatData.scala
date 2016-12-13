@@ -20,7 +20,7 @@ object CardImportancePolicy {
   * @param lastRepeatTime last time the card was repeated
   * @param repeatPolicy repeating policy, which should control how often this card should be repeated
   */
-class CardToRepeatData(val frontSide: String,
+case class CardToRepeatData(val frontSide: String,
                        val backSide: String,
                        val repeatPolicy: CardImportancePolicy,
                        val lastRepeatTime: Long = Long.MinValue,

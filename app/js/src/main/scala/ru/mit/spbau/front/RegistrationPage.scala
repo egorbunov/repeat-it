@@ -48,7 +48,11 @@ object RegistrationPage {
     private def setupGoLoginPageButton(): Unit = {
         val goLoginBtn = dom.document.getElementById("back-to-login-btn").asInstanceOf[html.Button]
         goLoginBtn.onclick = (_: Event) => {
-            Routing.switchToPage(Consts.loginPagePath, LoginManagement.setupLoginPage)
+            Routing.switchPageContents(
+                Consts.loginPagePath,
+                LoginManagement.setupLoginPage,
+                Consts.globalPlaceholderId
+            )
         }
     }
 }

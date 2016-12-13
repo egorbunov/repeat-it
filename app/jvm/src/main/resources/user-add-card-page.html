@@ -1,0 +1,61 @@
+<div class="container">
+        <form class="form-horizontal" id="add-card-form">
+            <!--<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 columns">-->
+            <div class="control-group">
+                <label>Front side (question)</label>
+                <div class="controls">
+                                    <textarea
+                                            class="form-control span10"
+                                            name="content"
+                                            id="front-side"
+                                            cols="70"
+                                            placeholder="When did Alexander Pushkin born?"
+                                            data-validation-required-message="Please enter your question" minlength="2"
+                                            data-validation-minlength-message="Min 3 characters"
+                                            data-toggle="tooltip"
+                                            required></textarea>
+                </div>
+            </div>
+            <!--</div>-->
+            <!--<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12 columns">-->
+            <div class="control-group">
+                <label>Back side (answer to learn)</label>
+                <div class="controls">
+                                    <textarea
+                                            class="form-control span10"
+                                            name="content"
+                                            id="back-side"
+                                            cols="70"
+                                            placeholder="June 6, 1799"
+                                            data-validation-required-message="Please enter answer to the question" minlength="2"
+                                            data-validation-minlength-message="Min 2 characters"
+                                            data-toggle="tooltip"
+                                            required></textarea>
+                </div>
+            </div>
+            <!--</div>-->
+            <div class="control-group">
+                <label class="control-label">How soon you need to remember it?</label>
+                <div class="controls">
+                    <label class="radio">
+                        <input type="radio" name="card[policy]" id="HIGH" value="HIGH" checked>
+                        As soon as possible
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="card[policy]" id="MEDIUM" value="MEDIUM">
+                        In the near future
+                    </label>
+                    <label class="radio">
+                        <input type="radio" name="card[policy]" id="LOW" value="LOW">
+                        I'm not hurrying, calm down
+                    </label>
+                </div>
+            </div>
+            <div class="control-group">
+                <div class="controls">
+                    <button class="btn btn-success" id="add-card-submit-btn" type="submit">Add</button>
+                    <button class="btn btn-danger" id="cancel-add-btn" type="reset">Cancel</button>
+                </div>
+            </div>
+        </form>
+</div>
