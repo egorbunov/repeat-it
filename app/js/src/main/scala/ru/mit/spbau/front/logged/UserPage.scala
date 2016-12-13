@@ -7,6 +7,7 @@ import org.scalajs.jquery.jQuery
 import ru.mit.spbau.front.{LoginManagement, RegistrationPage, Routing}
 import ru.mit.spbau.scala.shared.Consts
 
+
 /**
   * Main page, which user sees after login
   */

@@ -1,12 +1,14 @@
 package ru.mit.spbau.front.logged
 
 import org.scalajs.dom
+import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
 import org.scalajs.dom.raw.Event
 import org.scalajs.jquery.{JQueryEventObject, jQuery}
 import ru.mit.spbau.front.{LoginManagement, RegistrationPage, Routing}
 import ru.mit.spbau.scala.shared.Consts
 import ru.mit.spbau.scala.shared.data.{CardImportancePolicy, CardToRepeatData}
+import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 
 object AddCardPage {
     def setupAddCardPage(): Unit = {
@@ -30,6 +32,13 @@ object AddCardPage {
                 backSide,
                 policy
             )
+            Ajax.post(
+                url = "/api/add_new_card",
+                data = upickle.default.write(newCardData),
+                headers = LoginManagement.sessionTokenHeader
+            ).onSuccess({ case xhr =>
+                    dom.window.alert(xhr.responseText)
+            })
         }
     }
 }

@@ -8,13 +8,14 @@ import ru.mit.spbau.scala.shared.data.{CardToRepeatData, UserCredentials}
 /**
   * Actor, which persists registered users
   */
-class UsersCredsActor extends PersistentActor with StrictLogging {
+class CredentialsActor extends PersistentActor with StrictLogging {
     override def persistenceId: String = "users_persistence_actor_42"
 
-    var state = UsersCredsActor.State()
+    var state = CredentialsActor.State()
 
     override def receiveRecover: Receive = {
-        case SnapshotOffer(_, snapshot: UsersCredsActor.State) => state = snapshot
+        case SnapshotOffer(_, snapshot: CredentialsActor.State) => state = snapshot
+        case e: UserCredsEvent => updateState(e)
     }
 
     override def receiveCommand: Receive = {
@@ -33,9 +34,15 @@ class UsersCredsActor extends PersistentActor with StrictLogging {
 
         case e: UserCredsEvent.Register =>
             logger.info(s"Got register message: ${e.creds}")
-            persist(e) { event =>
-                state = state.userAdded(event.creds)
-            }
+            persist(e)(updateState)
+
+        case UserCredsEvent.Shutdown => context.stop(self)
+    }
+
+    def updateState(e: UserCredsEvent): Unit = e match {
+        case UserCredsEvent.Register(newCreds) =>
+            state = state.userAdded(newCreds)
+        case _ => logger.error("Unknown update state msg")
     }
 }
 
@@ -49,9 +56,11 @@ object UserCredsEvent {
 
     case class CheckUsername(username: String) extends UserCredsEvent
 
+    case class Shutdown() extends UserCredsEvent
+
 }
 
-object UsersCredsActor {
+object CredentialsActor {
 
     case class State(usersCreds: Map[String, UserCredentials] = Map.empty) {
         def userAdded(userData: UserCredentials): State = {

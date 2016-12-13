@@ -1,6 +1,6 @@
 package com.softwaremill.example
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpResponse
 import akka.stream.ActorMaterializer
@@ -13,10 +13,9 @@ import com.softwaremill.session.CsrfOptions._
 import com.softwaremill.session.SessionDirectives._
 import com.softwaremill.session.SessionOptions._
 import com.typesafe.scalalogging.StrictLogging
-import ru.mit.spbau.scala.data.UsersCredsActor
+import ru.mit.spbau.scala.data._
 import ru.mit.spbau.scala.shared.{ApiStatus, Consts}
-import ru.mit.spbau.scala.shared.data.UserCredentials
-import ru.mit.spbau.scala.data.UserCredsEvent
+import ru.mit.spbau.scala.shared.data.{CardToRepeatData, UserCredentials}
 import akka.pattern.ask
 import akka.util.Timeout
 import ru.mit.spbau.scala.service.ApiStatusCode
@@ -44,7 +43,11 @@ object RepeatItServer extends App with StrictLogging {
     val myInvalidateSession = invalidateSession(refreshable, usingCookies)
 
     // setting up user credentials persistent actor
-    val usersCredentialsActor = system.actorOf(Props[UsersCredsActor], name = "users_credentials")
+    val usersCredentialsActor = system.actorOf(Props[CredentialsActor], name = "users_persistence_actor_42")
+
+    def getUserCardsActorName(username: String): String = s"user_${username}_cards_actor"
+
+    var userCardsActorsMap = Map.empty[String, ActorRef]
 
     implicit val timeout = Timeout(5 seconds)
 
@@ -93,10 +96,20 @@ object RepeatItServer extends App with StrictLogging {
                                     logger.info(s"Credentials $userCreds check status: $isOkCreds")
 
                                     if (!isOkCreds) {
+                                        // ok...
                                         complete(ApiStatusCode.userNotRegistered)
                                     } else {
+                                        // creating session and ...
                                         setRepeatItSession(RepeatItSession(userCreds.login)) {
                                             setNewCsrfToken(checkHeader) { ctx =>
+                                                // creating user cards actor
+                                                val userCardsActor = system.actorOf(
+                                                    Props(new UserCardsActor(userCreds.login)),
+                                                    name = getUserCardsActorName(userCreds.login)
+                                                )
+                                                userCardsActorsMap =
+                                                    userCardsActorsMap.updated(userCreds.login, userCardsActor)
+
                                                 ctx.complete(ApiStatusCode.OK)
                                             }
                                         }
@@ -110,8 +123,19 @@ object RepeatItServer extends App with StrictLogging {
                             post {
                                 userSession { session =>
                                     myInvalidateSession { ctx =>
-                                        logger.info(s"Logging out $session")
-                                        ctx.complete(ApiStatusCode.OK)
+                                        if (!userCardsActorsMap.contains(session.username)) {
+                                            logger.error(s"No user credentials actor available " +
+                                                s"for user ${session.username}")
+                                            ctx.reject() // =(
+                                        } else {
+                                            val cardsActor = userCardsActorsMap.get(session.username).get
+                                            cardsActor ! "snap"
+                                            cardsActor ! CardsActorEvent.Shutdown
+                                            userCardsActorsMap = userCardsActorsMap - session.username
+                                            // deleting user cards actor
+                                            logger.info(s"Logging out $session")
+                                            ctx.complete(ApiStatusCode.OK)
+                                        }
                                     }
                                 }
                             }
@@ -129,17 +153,27 @@ object RepeatItServer extends App with StrictLogging {
                         } ~
                         path("get_cards") {
                             get {
-                                userSession { session =>
-                                    ctx =>
-                                        ctx.complete(ApiStatusCode.OK)
+                                userSession { session => ctx =>
+                                    ctx.complete(ApiStatusCode.OK)
                                 }
                             }
                         } ~
                         path("add_new_card") {
                             post {
                                 userSession { session =>
-                                    ctx =>
-                                        ctx.complete(ApiStatusCode.OK)
+                                    entity(as[String]) { e =>
+                                        val cardData = upickle.default.read[CardToRepeatData](e)
+                                        logger.info(s"${session.username} wants to add new card: ${cardData}")
+
+                                        if (!userCardsActorsMap.contains(session.username)) {
+                                            logger.error("No user credentials actor available for logged user!")
+                                            reject()
+                                        } else {
+                                            val cardsActor = userCardsActorsMap.get(session.username).get
+                                            cardsActor ! CardsActorEvent.NewCard(cardData)
+                                            complete(ApiStatusCode.OK)
+                                        }
+                                    }
                                 }
                             }
                         } ~
@@ -161,9 +195,7 @@ object RepeatItServer extends App with StrictLogging {
 
     println("Server started, press enter to stop. Visit http://localhost:8080.")
     StdIn.readLine()
-
     import system.dispatcher
-
     bindingFuture
         .flatMap(_.unbind())
         .onComplete { _ =>
