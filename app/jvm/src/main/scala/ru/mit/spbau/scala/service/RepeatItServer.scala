@@ -1,12 +1,11 @@
 package com.softwaremill.example
 
 import akka.actor.{ActorSystem, Props}
-import akka.http.javadsl.model.StatusCodes
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.HttpResponse
 import akka.stream.ActorMaterializer
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.model.StatusCodes._
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directive0
 import com.softwaremill.session._
 import com.softwaremill.session.CsrfDirectives._
@@ -46,21 +45,17 @@ object RepeatItServer extends App with StrictLogging {
     // setting up user credentials persistent actor
     val usersCredentialsActor = system.actorOf(Props[UsersCredsActor], name = "users_credentials")
 
-//    implicit val timeout = Timeout(5 seconds)
-//    val future = usersCredentialsActor ? UserCredsEvent.CheckLogin
-//    val doesUserExists = Await.result(future, timeout.duration).asInstanceOf[Boolean]
-
     val routes =
         path("") {
-            redirect(Consts.indexPagePath, Found)
+            redirect(Consts.indexPagePath, StatusCodes.Found)
         } ~
             path("login") {
                 logger.info("Login redirect")
-                redirect(Consts.loginPagePath, Found)
+                redirect(Consts.loginPagePath, StatusCodes.Found)
             } ~
             path("register") {
                 logger.info("Register redirect")
-                redirect(Consts.registerPagePath, Found)
+                redirect(Consts.registerPagePath, StatusCodes.Found)
             } ~
             randomTokenCsrfProtection(checkHeader) {
                 pathPrefix("api") {
@@ -70,10 +65,17 @@ object RepeatItServer extends App with StrictLogging {
                                 val userCreds = upickle.default.read[UserCredentials](e)
                                 logger.info(s"Registration request: $userCreds")
                                 implicit val timeout = Timeout(5 seconds)
-                                val future = usersCredentialsActor ? UserCredsEvent.CheckLogin
+                                val future = usersCredentialsActor ? UserCredsEvent.CheckLogin(userCreds)
                                 val doesUserExists = Await.result(future, timeout.duration).asInstanceOf[Boolean]
-                                logger.info(s"User already exists? $doesUserExists")
-                                complete("ok")
+                                logger.info(s"User $userCreds already exists? $doesUserExists")
+                                if (!doesUserExists) {
+                                    logger.info(s"Accept registration $userCreds")
+                                    usersCredentialsActor ! UserCredsEvent.Register(userCreds)
+                                    complete(StatusCodes.OK, s"Succesffuly registered user ${userCreds.login}")
+                                } else {
+                                    logger.info(s"Reject registration $userCreds")
+                                    complete(StatusCodes.OK, "User is already registered")
+                                }
                             }
                         }
                     } ~
@@ -84,7 +86,7 @@ object RepeatItServer extends App with StrictLogging {
                                     logger.info(s"Logging in user: $userCreds")
                                     setRepeatItSession(RepeatItSession(userCreds.login)) {
                                         setNewCsrfToken(checkHeader) { ctx =>
-                                            ctx.complete("ok")
+                                            ctx.complete(StatusCodes.OK)
                                         }
                                     }
                                 }
@@ -95,7 +97,7 @@ object RepeatItServer extends App with StrictLogging {
                                 userSession { session =>
                                     myInvalidateSession { ctx =>
                                         logger.info(s"Logging out $session")
-                                        ctx.complete("ok")
+                                        ctx.complete(StatusCodes.OK)
                                     }
                                 }
                             }
@@ -107,7 +109,7 @@ object RepeatItServer extends App with StrictLogging {
                                 userSession { session =>
                                     ctx =>
                                         logger.info("Current session: " + session)
-                                        ctx.complete(session.username)
+                                        ctx.complete(StatusCodes.OK, session.username)
                                 }
                             }
                         } ~
@@ -115,7 +117,7 @@ object RepeatItServer extends App with StrictLogging {
                             get {
                                 userSession { session =>
                                     ctx =>
-                                        ctx.complete("asdsa")
+                                        ctx.complete(StatusCodes.OK, "asdsa")
                                 }
                             }
                         }

@@ -4,10 +4,12 @@ import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
 import org.scalajs.jquery.jQuery
 import ru.mit.spbau.scala.shared.Consts
 import org.scalajs.dom
-import org.scalajs.dom.ext.Ajax
-import org.scalajs.dom.html
+import org.scalajs.dom.ext.{Ajax, AjaxException}
+import org.scalajs.dom.{XMLHttpRequest, html}
 import org.scalajs.dom.raw.Event
 import ru.mit.spbau.scala.shared.data.UserCredentials
+
+import scala.util.{Failure, Success}
 
 object RegistrationPage {
     def setupRegisterPage(): Unit = {
@@ -25,17 +27,9 @@ object RegistrationPage {
                     url = "/api/register",
                     data = upickle.default.write(credentials),
                     headers = LoginManagement.sessionTokenHeader
-                ).onComplete( p => {
-                    dom.window.alert(p.get.responseText)
-                    if (p.isSuccess) {
-                        dom.window.alert("OK!")
-                    } else {
-                        dom.window.alert("FAILED TO REGISTER =(")
-                    }
-                }
-//
-
-                )
+                ).onSuccess({ case xhr =>
+                        dom.window.alert(xhr.responseText)
+                })
             }
         }
     }

@@ -4,11 +4,13 @@ import com.couchmate.jscookie.Cookies
 import org.scalajs.dom
 import org.scalajs.dom.ext.Ajax
 import org.scalajs.dom.html
-import org.scalajs.dom.raw.Event
+import org.scalajs.dom.raw.{Event, XMLHttpRequest}
 import org.scalajs.jquery.jQuery
 import ru.mit.spbau.scala.shared.Consts
 import ru.mit.spbau.scala.shared.data.UserCredentials
+
 import scala.scalajs.concurrent.JSExecutionContext.Implicits.queue
+import scala.util.{Failure, Success}
 
 
 object LoginManagement {
@@ -22,17 +24,14 @@ object LoginManagement {
         Ajax.get(
             url = "/api/current_login",
             headers = sessionTokenHeader
-        ).onComplete(p => {
-            if (p.isSuccess) {
-                dom.window.alert(s"Logged as ${p.get.response.toString}")
-                dom.window.console.log("Success")
+        ).onComplete({
+            case Success(xhr) =>
+                dom.window.console.log(s"Logged as ${xhr.responseText}")
                 Commons.switchToPage(Consts.userPagePath, UserPage.setupUserPage)
-            } else {
-                dom.window.alert("Not logged in, go login...")
+            case Failure(t) =>
+                dom.window.alert("FAILURE")
                 Commons.switchToPage(Consts.loginPagePath, setupLoginPage)
-            }
-        }
-        )
+        })
     }
 
     /**
@@ -57,7 +56,8 @@ object LoginManagement {
         val loginForm = dom.document.getElementById("login-form").asInstanceOf[html.Form]
         loginForm.onsubmit = {
             (e: Event) => {
-                e.preventDefault() // do not refresh the page, man!
+                e.preventDefault()
+                // do not refresh the page, man!
                 val user = jQuery("#login-user").value().toString
                 val password = jQuery("#login-password").value().toString
                 dom.window.console.log(s"$user $password")
@@ -67,8 +67,13 @@ object LoginManagement {
                     url = "/api/login",
                     data = upickle.default.write(credentials),
                     headers = sessionTokenHeader
-                ).onComplete( p =>
-                    Commons.switchToPage(Consts.userPagePath, UserPage.setupUserPage)
+                ).onSuccess({ case xhr =>
+                    if (xhr.status == Commons.OK) {
+                        Commons.switchToPage(Consts.userPagePath, UserPage.setupUserPage)
+                    } else {
+                        dom.window.alert("Wrong username or password")
+                    }
+                }
                 )
             }
         }
