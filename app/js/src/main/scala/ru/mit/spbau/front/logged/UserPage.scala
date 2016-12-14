@@ -64,6 +64,32 @@ object UserPage {
             headers = LoginManagement.sessionTokenHeader
         ).onSuccess({ case xhr =>
             userCards = upickle.default.read[Map[Int, CardToRepeatData]](xhr.responseText)
+
+            userCards foreach { case (id, data) =>
+                val cardHtml = CardsStuff.getCardTemplate(id, data).toString()
+                jQuery("#cards-container").append(cardHtml)
+
+                val cardRowId = CardsStuff.getCardRowId(id)
+                jQuery(s"#$cardRowId").find(".card-action").css("background-color", CardsStuff.questionMainBackgroundColor)
+                // setup button, which flips between answer and question
+
+                val questionCardRow = dom.document.getElementById(cardRowId).asInstanceOf[html.Div]
+                questionCardRow.onclick = (e: Event) => {
+                    val questionPart = jQuery(s"#$cardRowId").find(".question-card")
+                    val answerPart = jQuery(s"#$cardRowId").find(".answer-card")
+                    if (questionPart.is(":visible")) {
+                        questionPart.hide()
+                        answerPart.show()
+                        jQuery(s"#$cardRowId").find(".card-action")
+                            .css("background-color", CardsStuff.answerMainBackgroundColor)
+                    } else {
+                        answerPart.hide()
+                        questionPart.show()
+                        jQuery(s"#$cardRowId").find(".card-action")
+                            .css("background-color", CardsStuff.questionMainBackgroundColor)
+                    }
+                }
+            }
             dom.window.console.log(userCards.size)
             dom.window.console.log(userCards.toString())
         })
