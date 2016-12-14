@@ -21,6 +21,16 @@ object UserPage {
     def setupUserPage(username: String): Unit = {
         jQuery("#logged-in-username").html(s"Logged as <b>$username</b>")
 
+        // main page is a card view
+        val mainPageGoBtn = dom.document.getElementById("go-main-page-btn").asInstanceOf[html.Button]
+        mainPageGoBtn.onclick = (e: Event) => {
+            Routing.switchPageContents(
+                Consts.userPagePath,
+                () => { UserPage.setupUserPage(username) },
+                Consts.globalPlaceholderId
+            )
+        }
+
         setupLogoutButton()
         setupDoRepeatButton()
         setupAddCardButton()
@@ -59,12 +69,14 @@ object UserPage {
     }
 
     private def setupUserCards(): Unit = {
+        // clear contents
+        jQuery("#cards-container").html("")
+
         Ajax.get(
             url = "/api/get_cards",
             headers = LoginManagement.sessionTokenHeader
         ).onSuccess({ case xhr =>
             userCards = upickle.default.read[Map[Int, CardToRepeatData]](xhr.responseText)
-
             userCards foreach { case (id, data) =>
                 val cardHtml = CardsStuff.getCardTemplate(id, data).toString()
                 jQuery("#cards-container").append(cardHtml)

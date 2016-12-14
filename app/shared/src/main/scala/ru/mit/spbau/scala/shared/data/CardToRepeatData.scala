@@ -1,15 +1,11 @@
 package ru.mit.spbau.scala.shared.data
 
-sealed trait CardImportancePolicy
-
 object CardImportancePolicy {
-    final case class Low() extends CardImportancePolicy
-    final case class Medium() extends CardImportancePolicy
-    final case class High() extends CardImportancePolicy
+    type Type = Int
 
-    val LOW = Low()
-    val MEDIUM = Medium()
-    val HIGH = High()
+    val LOW: Type = 0
+    val MEDIUM: Type = 1
+    val HIGH: Type = 2
 }
 
 /**
@@ -22,7 +18,7 @@ object CardImportancePolicy {
   */
 case class CardToRepeatData(val frontSide: String,
                        val backSide: String,
-                       val repeatPolicy: CardImportancePolicy,
+                       val repeatPolicy: CardImportancePolicy.Type,
                        val lastRepeatTime: Long = Long.MinValue,
                        val lastSuccessfulRepeatTime: Long = Long.MinValue) {
 }
