@@ -18,7 +18,7 @@ For now u can:
 * add new card (card is question on one side + answer on back side)
 * see the whole list of added cards and click on them to see answers...
 
-WARNING: it is implemented as one-page site, but without fancy frameworks, so u can go previous
+WARNING: it is implemented as one-page site, but without fancy frameworks, so u can't go previous
 or next page for know, because site transitions are not stacked manually =)
 
 ## Run and Build
